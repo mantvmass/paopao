@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ตาราง: User เก็บข้อมูลผู้ใช้งาน
+model User {
+  id        String    @id @default(uuid())
+  nickname  String
+  username  String    @unique
+  password  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  tracker   Tracker[]
+}
+
+// ตาราง: Tracker เก็บข้อมูลบันทึกรายรับรายจ่าย
+model Tracker {
+  id        String      @id @default(uuid())
+  userId    String
+  type      TrackerType
+  amount    Float       @default(0.00)
+  note      String      @default("") // บันทึกช่วยจำ
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ประเภทบันทึก
+enum TrackerType {
+  EXPENSE // ใช้จ่าย
+  INCOME // รายได้
+}
