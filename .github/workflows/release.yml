@@ -1,0 +1,50 @@
+name: Build and Publish Docker Image
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Extract Tag or Set Latest
+        id: vars
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG_NAME=${GITHUB_REF#refs/tags/}
+          else
+            TAG_NAME="latest"
+          fi
+          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
+
+      - name: Log in to GitHub Container Registry
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo $GITHUB_TOKEN | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build and Tag Docker Image
+        run: |
+          IMAGE_NAME=ghcr.io/${{ github.repository }}
+          IMAGE_NAME=${IMAGE_NAME,,}  # Convert to lowercase
+          echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
+          
+          docker build . -t ${IMAGE_NAME}:${TAG_NAME}
+          docker tag ${IMAGE_NAME}:${TAG_NAME} ${IMAGE_NAME}:latest
+
+      - name: Push Docker Image to GitHub Container Registry
+        run: |
+          docker push ${IMAGE_NAME}:${TAG_NAME}
+          docker push ${IMAGE_NAME}:latest
+
+      - name: Verify Docker Image
+        run: docker images | grep "${IMAGE_NAME}"

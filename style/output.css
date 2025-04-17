@@ -163,6 +163,9 @@
   .relative {
     position: relative;
   }
+  .contents {
+    display: contents;
+  }
   .flex {
     display: flex;
   }
@@ -208,6 +211,9 @@
   }
   .text-white {
     color: var(--color-white);
+  }
+  .lowercase {
+    text-transform: lowercase;
   }
   .underline {
     text-decoration-line: underline;
